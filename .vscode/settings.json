@@ -1,0 +1,6 @@
+{
+  // Allow Tailwind's special at-rules to pass validation in the built‑in CSS/SCSS/LESS language service.
+  "css.lint.unknownAtRules": "ignore",
+  "scss.lint.unknownAtRules": "ignore",
+  "less.lint.unknownAtRules": "ignore"
+}
