@@ -1,232 +1,213 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/authContext";
-import { MOCK_BOOKINGS, SPORT_ICONS } from "@/lib/mockData";
+
+type Owner = {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+};
+
+type Turf = {
+  _id: string;
+  name: string;
+  location: string;
+  sportType: string;
+  pricePerHour: number;
+  facilities: string[];
+  ownerId?: Owner;
+  isAvailable: boolean;
+};
+
+type User = {
+  id?: string;
+  _id?: string;
+  name: string;
+  email: string;
+  role: string;
+};
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "settings">("upcoming");
-  const [bookings, setBookings] = useState(MOCK_BOOKINGS);
-  const [toast, setToast] = useState({ show: false, message: "" });
 
-  const [settings, setSettings] = useState({
-    confirmations: true,
-    reminders: true,
-    newGames: false,
-    news: true,
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [turfs, setTurfs] = useState<Turf[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [bookingMessage, setBookingMessage] = useState("");
 
-  if (!user) {
-    return (
-      <div className="min-h-screen pt-32 px-6 max-w-7xl mx-auto text-center bg-[#28282B]">
-        <h1 className="text-3xl font-bold mb-4">Please log in</h1>
-        <p className="text-gray-400 mb-8">You need to be logged in to view your dashboard.</p>
-        <Link href="/login" className="btn-primary">
-          Go to Login
-        </Link>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
 
-  const upcomingBookings = bookings.filter(b => b.status === "confirmed" && b.id !== "b4" && b.id !== "b3");
-  const pastBookings = bookings.filter(b => b.id === "b3" || b.status === "cancelled");
+    if (!savedUser || !token) {
+      router.push("/login");
+      return;
+    }
 
-  const cancelBooking = (id: string) => {
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: "cancelled" } : b));
-    setToast({ show: true, message: "Booking cancelled. Refund pending." });
-    setTimeout(() => setToast({ show: false, message: "" }), 3000);
-  };
+    try {
+      const parsedUser = JSON.parse(savedUser);
+      setUser(parsedUser);
+    } catch {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      router.push("/login");
+      return;
+    }
 
-  const toggleSetting = (key: keyof typeof settings) => {
-    setSettings(prev => ({ ...prev, [key]: !prev[key] }));
+    fetchTurfs();
+  }, [router]);
+
+  const fetchTurfs = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await fetch("http://127.0.0.1:5000/api/turfs");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch turfs");
+      }
+
+      setTurfs(data);
+    } catch {
+      setError("Could not load turfs");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogout = () => {
-    logout();
-    router.push("/");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    router.push("/login");
+  };
+
+  const handleBookTurf = async (turfId: string) => {
+    try {
+      setBookingMessage("");
+
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
+      const response = await fetch("http://127.0.0.1:5000/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          turfId,
+          bookingDate: "2026-04-14",
+          timeSlot: "1:00 PM - 2:00 PM",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setBookingMessage(data.message || "Booking failed");
+        return;
+      }
+
+      setBookingMessage("Booking created successfully");
+    } catch {
+      setBookingMessage("Something went wrong while booking");
+    }
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-20 px-6 max-w-7xl mx-auto bg-[#28282B] relative">
-      {/* Ambient glow */}
-      <div className="absolute top-20 left-0 w-[400px] h-[400px] rounded-full
-                      bg-[#22c55e]/5 blur-[120px] pointer-events-none" />
-
-      {/* Toast */}
-      {toast.show && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50
-                        bg-[#141414] border border-[#22c55e]/40 text-[#22c55e]
-                        px-6 py-4 rounded-2xl text-sm font-medium
-                        flex items-center gap-3 backdrop-blur-md
-                        shadow-[0_8px_32px_rgba(34,197,94,0.2)]
-                        animate-enter">
-          <span className="w-2 h-2 rounded-full bg-[#22c55e] glow-pulse" />
-          {toast.message}
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6 pb-6 border-b border-white/[0.06]">
-        <div>
-          <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-none mb-2">Welcome back, {user.name}</h1>
-          <p className="text-gray-400">{user.city} • Regular Player</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="bg-[#f97316]/10 border border-[#f97316]/30 text-[#f97316] rounded-full px-4 py-2 text-sm font-medium flex items-center gap-2">
-            <span>🪙</span> {user.turfCoins || 0} Turf Coins
+    <div className="min-h-screen bg-[#28282B] text-white px-6 py-10">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Player Dashboard</h1>
+            {user && (
+              <p className="text-gray-400 mt-2">
+                Welcome, {user.name} ({user.role})
+              </p>
+            )}
           </div>
-          <button onClick={handleLogout} className="border border-red-500/50 text-red-500 hover:bg-red-500/10 rounded-full px-4 py-2 text-sm font-medium transition-colors">
-            Log out
-          </button>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => router.push("/my-bookings")}
+              className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg"
+            >
+              My Bookings
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg"
+            >
+              Logout
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide mb-8">
-        {[
-          { id: "upcoming", label: "Upcoming bookings" },
-          { id: "past", label: "Past bookings" },
-          { id: "settings", label: "Notification settings" },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`shrink-0 rounded-full px-5 py-2.5 text-sm font-medium transition-colors ${
-              activeTab === tab.id
-                ? "bg-[#4a6cf7] text-white"
-                : "bg-[#141414] border border-white/[0.06] text-gray-400 hover:text-white"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+        {error && <p className="text-red-400 mb-4 text-sm">{error}</p>}
 
-      {/* Content */}
-      <div className="max-w-4xl">
+        {bookingMessage && (
+          <p className="text-green-400 mb-4 text-sm">{bookingMessage}</p>
+        )}
 
-        {/* UPCOMING BOOKINGS */}
-        {activeTab === "upcoming" && (
-          <div className="animate-enter space-y-4">
-            {upcomingBookings.length === 0 ? (
-              <div className="text-center py-16 bg-[#141414] border border-white/[0.06] rounded-3xl"
-                   style={{ boxShadow: "inset 1px 1px 0 rgba(255,255,255,0.05)" }}>
-                <div className="text-5xl mb-4 opacity-50">📅</div>
-                <h3 className="text-xl font-bold mb-2">No upcoming games</h3>
-                <p className="text-gray-400 mb-6">You don&apos;t have any upcoming bookings.</p>
-                <Link href="/venues" className="text-[#4a6cf7] hover:underline font-medium">Browse venues →</Link>
+        <h2 className="text-2xl font-semibold mb-6">Available Turfs</h2>
+
+        {loading ? (
+          <p className="text-gray-400">Loading turfs...</p>
+        ) : turfs.length === 0 ? (
+          <p className="text-gray-400">No turfs found.</p>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {turfs.map((turf) => (
+              <div
+                key={turf._id}
+                className="bg-[#1f1f22] border border-white/10 rounded-2xl p-5 shadow-lg"
+              >
+                <h3 className="text-xl font-semibold mb-2">{turf.name}</h3>
+                <p className="text-gray-300 mb-1">Location: {turf.location}</p>
+                <p className="text-gray-300 mb-1">Sport: {turf.sportType}</p>
+                <p className="text-gray-300 mb-1">
+                  Price: €{turf.pricePerHour} / hour
+                </p>
+                <p className="text-gray-300 mb-1">
+                  Available: {turf.isAvailable ? "Yes" : "No"}
+                </p>
+
+                {turf.facilities && turf.facilities.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-sm text-gray-400 mb-2">Facilities:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {turf.facilities.map((facility, index) => (
+                        <span
+                          key={index}
+                          className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full"
+                        >
+                          {facility}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => handleBookTurf(turf._id)}
+                  className="mt-5 w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg"
+                >
+                  Book Turf
+                </button>
               </div>
-            ) : (
-              upcomingBookings.map((booking) => (
-                <div key={booking.id} className="bg-[#141414] border border-white/[0.06] rounded-3xl p-6 flex flex-col sm:flex-row gap-6 justify-between items-center feature-card"
-                     style={{ boxShadow: "inset 1px 1px 0 rgba(255,255,255,0.05)" }}>
-                  <div className="flex items-center gap-4 w-full sm:w-auto">
-                    <div className="w-14 h-14 rounded-full bg-[#4a6cf7]/10 flex justify-center items-center text-3xl shrink-0">
-                      {SPORT_ICONS[booking.sport] || "🏅"}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-lg leading-tight mb-1">{booking.venueName}</h3>
-                      <div className="flex gap-2 items-center">
-                        <span className="text-[#4a6cf7] text-sm font-medium">{booking.sport}</span>
-                        <span className="text-gray-400 text-sm">• {booking.displayDate}, {booking.displayTime}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end border-t border-white/[0.06] pt-4 sm:pt-0 sm:border-0 pl-14 sm:pl-0">
-                    <span className="badge-confirmed font-bold uppercase tracking-wider text-xs">Confirmed</span>
-                    <button
-                      onClick={() => cancelBooking(booking.id)}
-                      className="border border-red-500/50 text-red-500 hover:bg-red-500/10 rounded-full px-4 py-2 text-sm font-medium transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
+            ))}
           </div>
         )}
-
-        {/* PAST BOOKINGS */}
-        {activeTab === "past" && (
-          <div className="animate-enter space-y-4">
-            {pastBookings.length === 0 ? (
-              <p className="text-gray-400">No past bookings found.</p>
-            ) : (
-              pastBookings.map((booking) => (
-                <div key={booking.id} className="bg-[#141414] border border-white/[0.06] rounded-3xl p-6 flex flex-col sm:flex-row gap-6 justify-between items-center opacity-80"
-                     style={{ boxShadow: "inset 1px 1px 0 rgba(255,255,255,0.05)" }}>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-white/[0.05] flex justify-center items-center text-2xl shrink-0">
-                      {SPORT_ICONS[booking.sport] || "🏅"}
-                    </div>
-                    <div>
-                      <h3 className="font-bold leading-tight mb-1 text-gray-300">{booking.venueName}</h3>
-                      <div className="flex gap-2 items-center">
-                        <span className="text-gray-400 text-sm">{booking.sport}</span>
-                        <span className="text-gray-500 text-sm">• {booking.displayDate}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    {booking.status === "cancelled" ? (
-                      <span className="badge-cancelled font-bold uppercase tracking-wider text-xs">Cancelled</span>
-                    ) : (
-                      <span className="badge-blocked font-bold uppercase tracking-wider text-xs">Completed</span>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {/* SETTINGS */}
-        {activeTab === "settings" && (
-          <div className="animate-enter bg-[#141414] border border-white/[0.06] rounded-3xl overflow-hidden"
-               style={{ boxShadow: "inset 1px 1px 0 rgba(255,255,255,0.05)" }}>
-            <div className="p-6 border-b border-white/[0.06]">
-              <h3 className="text-lg font-bold">Email Preferences</h3>
-              <p className="text-gray-400 text-sm">Control what emails you receive from SportMate.</p>
-            </div>
-
-            <div className="divide-y divide-white/[0.06]">
-              {[
-                { id: "confirmations", label: "Booking confirmations", desc: "Get an email when your booking is confirmed." },
-                { id: "reminders", label: "Booking reminders (24h before)", desc: "We'll remind you the day before your game." },
-                { id: "newGames", label: "New games near me", desc: "Alerts when open games are posted in your city." },
-                { id: "news", label: "Sport Mate news & offers", desc: "Updates, promotions, and Turf Coin rewards." },
-              ].map((item) => (
-                <div key={item.id} className="p-6 flex justify-between items-center">
-                  <div>
-                    <h4 className="font-bold text-gray-200">{item.label}</h4>
-                    <p className="text-xs text-gray-500 mt-1">{item.desc}</p>
-                  </div>
-
-                  <div
-                    onClick={() => toggleSetting(item.id as any)}
-                    className={`w-12 h-6 rounded-full cursor-pointer transition-colors relative flex items-center shrink-0 ${
-                      settings[item.id as keyof typeof settings] ? "bg-[#4a6cf7]" : "bg-white/[0.08]"
-                    }`}
-                  >
-                    <div
-                      className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                        settings[item.id as keyof typeof settings] ? "translate-x-6" : "translate-x-1"
-                      }`}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
       </div>
     </div>
   );
