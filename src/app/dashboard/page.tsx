@@ -29,6 +29,13 @@ type User = {
   role: string;
 };
 
+type BookingFormState = {
+  [turfId: string]: {
+    bookingDate: string;
+    timeSlot: string;
+  };
+};
+
 export default function DashboardPage() {
   const router = useRouter();
 
@@ -37,6 +44,22 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [bookingMessage, setBookingMessage] = useState("");
+  const [bookingError, setBookingError] = useState("");
+  const [bookingLoading, setBookingLoading] = useState<string | null>(null);
+  const [bookingForm, setBookingForm] = useState<BookingFormState>({});
+
+  const timeSlots = [
+    "8:00 AM - 9:00 AM",
+    "9:00 AM - 10:00 AM",
+    "10:00 AM - 11:00 AM",
+    "11:00 AM - 12:00 PM",
+    "12:00 PM - 1:00 PM",
+    "1:00 PM - 2:00 PM",
+    "2:00 PM - 3:00 PM",
+    "3:00 PM - 4:00 PM",
+    "4:00 PM - 5:00 PM",
+    "5:00 PM - 6:00 PM",
+  ];
 
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
@@ -65,7 +88,7 @@ export default function DashboardPage() {
       setLoading(true);
       setError("");
 
-      const response = await fetch("http://127.0.0.1:5000/api/turfs");
+      const response = await fetch("http://localhost:5000/api/turfs");
       const data = await response.json();
 
       if (!response.ok) {
@@ -73,6 +96,15 @@ export default function DashboardPage() {
       }
 
       setTurfs(data);
+
+      const initialFormState: BookingFormState = {};
+      data.forEach((turf: Turf) => {
+        initialFormState[turf._id] = {
+          bookingDate: "",
+          timeSlot: "",
+        };
+      });
+      setBookingForm(initialFormState);
     } catch {
       setError("Could not load turfs");
     } finally {
@@ -86,9 +118,25 @@ export default function DashboardPage() {
     router.push("/login");
   };
 
+  const handleBookingInputChange = (
+    turfId: string,
+    field: "bookingDate" | "timeSlot",
+    value: string
+  ) => {
+    setBookingForm((prev) => ({
+      ...prev,
+      [turfId]: {
+        ...prev[turfId],
+        [field]: value,
+      },
+    }));
+  };
+
   const handleBookTurf = async (turfId: string) => {
     try {
       setBookingMessage("");
+      setBookingError("");
+      setBookingLoading(turfId);
 
       const token = localStorage.getItem("token");
 
@@ -97,7 +145,16 @@ export default function DashboardPage() {
         return;
       }
 
-      const response = await fetch("http://127.0.0.1:5000/api/bookings", {
+      const selectedDate = bookingForm[turfId]?.bookingDate;
+      const selectedTime = bookingForm[turfId]?.timeSlot;
+
+      if (!selectedDate || !selectedTime) {
+        setBookingError("Please select both booking date and time slot");
+        setBookingLoading(null);
+        return;
+      }
+
+      const response = await fetch("http://localhost:5000/api/bookings", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -105,21 +162,32 @@ export default function DashboardPage() {
         },
         body: JSON.stringify({
           turfId,
-          bookingDate: "2026-04-14",
-          timeSlot: "1:00 PM - 2:00 PM",
+          bookingDate: selectedDate,
+          timeSlot: selectedTime,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setBookingMessage(data.message || "Booking failed");
+        setBookingError(data.message || "Booking failed");
+        setBookingLoading(null);
         return;
       }
 
       setBookingMessage("Booking created successfully");
+
+      setBookingForm((prev) => ({
+        ...prev,
+        [turfId]: {
+          bookingDate: "",
+          timeSlot: "",
+        },
+      }));
     } catch {
-      setBookingMessage("Something went wrong while booking");
+      setBookingError("Something went wrong while booking");
+    } finally {
+      setBookingLoading(null);
     }
   };
 
@@ -154,9 +222,11 @@ export default function DashboardPage() {
         </div>
 
         {error && <p className="text-red-400 mb-4 text-sm">{error}</p>}
-
         {bookingMessage && (
           <p className="text-green-400 mb-4 text-sm">{bookingMessage}</p>
+        )}
+        {bookingError && (
+          <p className="text-red-400 mb-4 text-sm">{bookingError}</p>
         )}
 
         <h2 className="text-2xl font-semibold mb-6">Available Turfs</h2>
@@ -198,11 +268,46 @@ export default function DashboardPage() {
                   </div>
                 )}
 
+                <div className="mt-4 space-y-3">
+                  <input
+                    type="date"
+                    value={bookingForm[turf._id]?.bookingDate || ""}
+                    onChange={(e) =>
+                      handleBookingInputChange(
+                        turf._id,
+                        "bookingDate",
+                        e.target.value
+                      )
+                    }
+                    className="w-full bg-[#2c2c31] border border-white/10 rounded-lg px-3 py-2 text-white"
+                  />
+
+                  <select
+                    value={bookingForm[turf._id]?.timeSlot || ""}
+                    onChange={(e) =>
+                      handleBookingInputChange(
+                        turf._id,
+                        "timeSlot",
+                        e.target.value
+                      )
+                    }
+                    className="w-full bg-[#2c2c31] border border-white/10 rounded-lg px-3 py-2 text-white"
+                  >
+                    <option value="">Select time slot</option>
+                    {timeSlots.map((slot) => (
+                      <option key={slot} value={slot}>
+                        {slot}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <button
                   onClick={() => handleBookTurf(turf._id)}
-                  className="mt-5 w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg"
+                  className="mt-5 w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg disabled:opacity-60"
+                  disabled={bookingLoading === turf._id}
                 >
-                  Book Turf
+                  {bookingLoading === turf._id ? "Booking..." : "Book Turf"}
                 </button>
               </div>
             ))}
