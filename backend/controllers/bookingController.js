@@ -1,4 +1,7 @@
 const Booking = require("../models/Booking");
+const User = require("../models/user");
+const Turf = require("../models/Turf");
+const sendEmail = require("../utils/sendEmail");
 
 const createBooking = async (req, res) => {
   try {
@@ -27,6 +30,26 @@ const createBooking = async (req, res) => {
       timeSlot,
     });
 
+    const user = await User.findById(userId);
+    const turf = await Turf.findById(turfId);
+
+    if (user && turf) {
+      await sendEmail(
+        user.email,
+        "SportMate Booking Confirmation",
+        `Hello ${user.name},
+
+Your booking has been confirmed.
+
+Turf: ${turf.name}
+Location: ${turf.location}
+Date: ${bookingDate}
+Time: ${timeSlot}
+
+Thank you for using SportMate.`
+      );
+    }
+
     return res.status(201).json({
       message: "Booking created successfully",
       booking,
@@ -48,6 +71,26 @@ const cancelBooking = async (req, res) => {
 
     booking.status = "cancelled";
     await booking.save();
+
+    const user = await User.findById(booking.userId);
+    const turf = await Turf.findById(booking.turfId);
+
+    if (user && turf) {
+      await sendEmail(
+        user.email,
+        "SportMate Booking Cancelled",
+        `Hello ${user.name},
+
+Your booking has been cancelled.
+
+Turf: ${turf.name}
+Location: ${turf.location}
+Date: ${booking.bookingDate}
+Time: ${booking.timeSlot}
+
+We hope to see you again soon on SportMate.`
+      );
+    }
 
     return res.status(200).json({
       message: "Booking cancelled successfully",

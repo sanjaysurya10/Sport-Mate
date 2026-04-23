@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-type Owner = {
-  _id: string;
+type User = {
+  id?: string;
+  _id?: string;
   name: string;
   email: string;
   role: string;
@@ -17,16 +18,7 @@ type Turf = {
   sportType: string;
   pricePerHour: number;
   facilities: string[];
-  ownerId?: Owner;
   isAvailable: boolean;
-};
-
-type User = {
-  id?: string;
-  _id?: string;
-  name: string;
-  email: string;
-  role: string;
 };
 
 type BookingFormState = {
@@ -36,17 +28,30 @@ type BookingFormState = {
   };
 };
 
+type WeatherState = {
+  [turfId: string]: {
+    temperature: number;
+    condition: string;
+    description: string;
+    humidity: number;
+    windSpeed: number;
+  };
+};
+
 export default function DashboardPage() {
   const router = useRouter();
 
   const [user, setUser] = useState<User | null>(null);
   const [turfs, setTurfs] = useState<Turf[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authChecking, setAuthChecking] = useState(true);
   const [error, setError] = useState("");
   const [bookingMessage, setBookingMessage] = useState("");
   const [bookingError, setBookingError] = useState("");
   const [bookingLoading, setBookingLoading] = useState<string | null>(null);
   const [bookingForm, setBookingForm] = useState<BookingFormState>({});
+  const [weatherData, setWeatherData] = useState<WeatherState>({});
+  const [weatherLoading, setWeatherLoading] = useState(false);
 
   const timeSlots = [
     "8:00 AM - 9:00 AM",
@@ -71,17 +76,33 @@ export default function DashboardPage() {
     }
 
     try {
-      const parsedUser = JSON.parse(savedUser);
+      const parsedUser: User = JSON.parse(savedUser);
+
+      if (parsedUser.role === "owner") {
+        router.push("/owner/dashboard");
+        return;
+      }
+
+      if (parsedUser.role === "admin") {
+        router.push("/admin");
+        return;
+      }
+
       setUser(parsedUser);
     } catch {
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       router.push("/login");
       return;
+    } finally {
+      setAuthChecking(false);
     }
-
-    fetchTurfs();
   }, [router]);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchTurfs();
+  }, [user]);
 
   const fetchTurfs = async () => {
     try {
@@ -104,11 +125,48 @@ export default function DashboardPage() {
           timeSlot: "",
         };
       });
+
       setBookingForm(initialFormState);
+      fetchWeatherForTurfs(data);
     } catch {
       setError("Could not load turfs");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchWeatherForTurfs = async (turfList: Turf[]) => {
+    try {
+      setWeatherLoading(true);
+
+      const weatherResults: WeatherState = {};
+
+      for (const turf of turfList) {
+        try {
+          const response = await fetch(
+            `http://localhost:5000/api/weather?city=${encodeURIComponent(
+              turf.location
+            )}`
+          );
+          const data = await response.json();
+
+          if (response.ok) {
+            weatherResults[turf._id] = {
+              temperature: data.temperature,
+              condition: data.condition,
+              description: data.description,
+              humidity: data.humidity,
+              windSpeed: data.windSpeed,
+            };
+          }
+        } catch {
+          // ignore single weather failure
+        }
+      }
+
+      setWeatherData(weatherResults);
+    } finally {
+      setWeatherLoading(false);
     }
   };
 
@@ -191,17 +249,29 @@ export default function DashboardPage() {
     }
   };
 
+  if (authChecking) {
+    return (
+      <div className="min-h-screen bg-[#28282B] text-white px-6 py-10">
+        <div className="max-w-6xl mx-auto">
+          <p className="text-gray-400">Checking login...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-[#28282B] text-white px-6 py-10">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold">Player Dashboard</h1>
-            {user && (
-              <p className="text-gray-400 mt-2">
-                Welcome, {user.name} ({user.role})
-              </p>
-            )}
+            <p className="text-gray-400 mt-2">
+              Welcome, {user.name} ({user.role})
+            </p>
           </div>
 
           <div className="flex gap-3">
@@ -267,6 +337,23 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 )}
+
+                <div className="mt-3 text-sm text-gray-300 bg-[#2c2c31] rounded-lg p-3">
+                  <p className="font-medium mb-1">🌤 Weather</p>
+                  {weatherLoading ? (
+                    <p>Loading weather...</p>
+                  ) : weatherData[turf._id] ? (
+                    <>
+                      <p>Temp: {weatherData[turf._id].temperature}°C</p>
+                      <p>Condition: {weatherData[turf._id].condition}</p>
+                      <p>Description: {weatherData[turf._id].description}</p>
+                      <p>Humidity: {weatherData[turf._id].humidity}%</p>
+                      <p>Wind: {weatherData[turf._id].windSpeed} m/s</p>
+                    </>
+                  ) : (
+                    <p>Weather not available</p>
+                  )}
+                </div>
 
                 <div className="mt-4 space-y-3">
                   <input

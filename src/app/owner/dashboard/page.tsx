@@ -33,6 +33,7 @@ export default function OwnerDashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [turfs, setTurfs] = useState<Turf[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authChecking, setAuthChecking] = useState(true);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -53,7 +54,7 @@ export default function OwnerDashboardPage() {
     }
 
     try {
-      const parsedUser = JSON.parse(savedUser);
+      const parsedUser: User = JSON.parse(savedUser);
 
       if (parsedUser.role !== "owner") {
         router.push("/login");
@@ -61,13 +62,20 @@ export default function OwnerDashboardPage() {
       }
 
       setUser(parsedUser);
-      fetchTurfs(parsedUser);
     } catch {
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       router.push("/login");
+      return;
+    } finally {
+      setAuthChecking(false);
     }
   }, [router]);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchTurfs(user);
+  }, [user]);
 
   const fetchTurfs = async (loggedInUser: User) => {
     try {
@@ -163,172 +171,143 @@ export default function OwnerDashboardPage() {
     }
   };
 
-  if (!user) {
+  if (authChecking) {
     return (
-      <div className="min-h-screen pt-32 px-6 max-w-7xl mx-auto text-center bg-[#28282B] text-white">
-        <h1 className="text-3xl font-bold mb-4">Loading owner dashboard...</h1>
+      <div className="min-h-screen bg-[#28282B] text-white p-8">
+        <p className="text-gray-400">Checking owner login...</p>
       </div>
     );
   }
 
+  if (!user) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen pt-24 pb-20 px-6 max-w-7xl mx-auto bg-[#28282B] relative text-white">
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-[#8b5cf6]/6 blur-[120px] pointer-events-none" />
-
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6 relative z-10">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#4a6cf7] mb-3">
-            Owner Portal
-          </p>
-          <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-none mb-2">
-            Owner dashboard
-          </h1>
-          <p className="text-gray-400">Welcome back, {user.name}</p>
-        </div>
-
-        <div className="flex gap-3">
-          <button
-            onClick={() => router.push("/")}
-            className="border border-white/[0.08] hover:bg-white/[0.04] rounded-full px-6 py-2 text-sm font-medium transition-colors text-white"
-          >
-            Home
-          </button>
-
-          <button
-            onClick={handleLogout}
-            className="border border-red-500/50 text-red-500 hover:bg-red-500/10 rounded-full px-6 py-2 text-sm font-medium transition-colors"
-          >
-            Log out
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-16 relative z-10">
-        <div className="bg-[#141414] border border-white/[0.06] rounded-2xl p-6 border-l-2 border-[#4a6cf7]">
-          <div className="text-3xl font-black mb-1">{turfs.length}</div>
-          <div className="text-sm text-gray-400">Your venues</div>
-        </div>
-
-        <div className="bg-[#141414] border border-white/[0.06] rounded-2xl p-6 border-l-2 border-[#22c55e]">
-          <div className="text-3xl font-black mb-1 text-[#22c55e]">
-            {turfs.filter((turf) => turf.isAvailable).length}
+    <div className="min-h-screen bg-[#28282B] text-white px-6 py-10">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Owner Dashboard</h1>
+            <p className="text-gray-400 mt-2">
+              Welcome, {user.name} ({user.role})
+            </p>
           </div>
-          <div className="text-sm text-gray-400">Available venues</div>
-        </div>
 
-        <div className="bg-[#141414] border border-white/[0.06] rounded-2xl p-6 border-l-2 border-[#f97316]">
-          <div className="text-3xl font-black mb-1 text-[#f97316]">
-            {turfs.filter((turf) => !turf.isAvailable).length}
+          <div className="flex gap-3">
+            <button
+              onClick={() => router.push("/")}
+              className="bg-gray-700 hover:bg-gray-800 px-4 py-2 rounded-lg"
+            >
+              Home
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg"
+            >
+              Logout
+            </button>
           </div>
-          <div className="text-sm text-gray-400">Unavailable venues</div>
         </div>
-
-        <div className="bg-[#141414] border border-white/[0.06] rounded-2xl p-6 border-l-2 border-[#8b5cf6]">
-          <div className="text-3xl font-black mb-1 text-[#8b5cf6]">
-            Owner
-          </div>
-          <div className="text-sm text-gray-400">Account type</div>
-        </div>
-      </div>
-
-      <div className="bg-[#141414] border border-white/[0.06] rounded-3xl p-6 mb-12 relative z-10">
-        <h2 className="text-2xl font-bold mb-6">Add New Turf</h2>
 
         {error && <p className="text-red-400 mb-4">{error}</p>}
         {successMessage && <p className="text-green-400 mb-4">{successMessage}</p>}
 
-        <form onSubmit={handleAddTurf} className="grid md:grid-cols-2 gap-4">
-          <input
-            type="text"
-            placeholder="Turf name"
-            className="input-dark"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+        <div className="bg-[#1f1f22] border border-white/10 rounded-2xl p-6 mb-10">
+          <h2 className="text-2xl font-semibold mb-6">Add New Turf</h2>
 
-          <input
-            type="text"
-            placeholder="Location"
-            className="input-dark"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            required
-          />
+          <form onSubmit={handleAddTurf} className="grid md:grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="Turf name"
+              className="w-full bg-[#2c2c31] border border-white/10 rounded-lg px-3 py-2 text-white"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
 
-          <input
-            type="text"
-            placeholder="Sport type (e.g. Football)"
-            className="input-dark"
-            value={sportType}
-            onChange={(e) => setSportType(e.target.value)}
-            required
-          />
+            <input
+              type="text"
+              placeholder="Location"
+              className="w-full bg-[#2c2c31] border border-white/10 rounded-lg px-3 py-2 text-white"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              required
+            />
 
-          <input
-            type="number"
-            placeholder="Price per hour"
-            className="input-dark"
-            value={pricePerHour}
-            onChange={(e) => setPricePerHour(e.target.value)}
-            required
-          />
+            <input
+              type="text"
+              placeholder="Sport type (e.g. Football)"
+              className="w-full bg-[#2c2c31] border border-white/10 rounded-lg px-3 py-2 text-white"
+              value={sportType}
+              onChange={(e) => setSportType(e.target.value)}
+              required
+            />
 
-          <input
-            type="text"
-            placeholder="Facilities (comma separated)"
-            className="input-dark md:col-span-2"
-            value={facilities}
-            onChange={(e) => setFacilities(e.target.value)}
-          />
+            <input
+              type="number"
+              placeholder="Price per hour"
+              className="w-full bg-[#2c2c31] border border-white/10 rounded-lg px-3 py-2 text-white"
+              value={pricePerHour}
+              onChange={(e) => setPricePerHour(e.target.value)}
+              required
+            />
 
-          <button
-            type="submit"
-            className="btn-primary md:col-span-2"
-            disabled={addingTurf}
-          >
-            {addingTurf ? "Adding turf..." : "Add Turf"}
-          </button>
-        </form>
-      </div>
+            <input
+              type="text"
+              placeholder="Facilities (comma separated)"
+              className="w-full bg-[#2c2c31] border border-white/10 rounded-lg px-3 py-2 text-white md:col-span-2"
+              value={facilities}
+              onChange={(e) => setFacilities(e.target.value)}
+            />
 
-      <div className="relative z-10">
-        <h2 className="text-3xl font-bold tracking-tight mb-6">My Venues</h2>
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg md:col-span-2"
+              disabled={addingTurf}
+            >
+              {addingTurf ? "Adding turf..." : "Add Turf"}
+            </button>
+          </form>
+        </div>
+
+        <h2 className="text-2xl font-semibold mb-6">My Turfs</h2>
 
         {loading ? (
           <p className="text-gray-400">Loading your turfs...</p>
         ) : turfs.length === 0 ? (
-          <div className="bg-[#141414] border border-white/[0.06] rounded-3xl p-6">
-            <p className="text-gray-400">No turfs found. Add your first turf above.</p>
-          </div>
+          <p className="text-gray-400">No turfs found. Add your first turf above.</p>
         ) : (
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {turfs.map((turf) => (
               <div
                 key={turf._id}
-                className="bg-[#141414] border border-white/[0.06] rounded-3xl p-6"
+                className="bg-[#1f1f22] border border-white/10 rounded-2xl p-5 shadow-lg"
               >
-                <h3 className="font-bold text-xl mb-2">{turf.name}</h3>
-                <p className="text-gray-400 mb-1">{turf.location}</p>
+                <h3 className="text-xl font-semibold mb-2">{turf.name}</h3>
+                <p className="text-gray-300 mb-1">Location: {turf.location}</p>
                 <p className="text-gray-300 mb-1">Sport: {turf.sportType}</p>
-                <p className="text-gray-300 mb-1">€{turf.pricePerHour} / hour</p>
-                <p className="text-gray-300 mb-3">
-                  Status:{" "}
-                  <span className={turf.isAvailable ? "text-green-400" : "text-red-400"}>
-                    {turf.isAvailable ? "Available" : "Unavailable"}
-                  </span>
+                <p className="text-gray-300 mb-1">
+                  Price: €{turf.pricePerHour} / hour
+                </p>
+                <p className="text-gray-300 mb-1">
+                  Available: {turf.isAvailable ? "Yes" : "No"}
                 </p>
 
                 {turf.facilities?.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {turf.facilities.map((facility, index) => (
-                      <span
-                        key={index}
-                        className="bg-white/[0.05] border border-white/[0.06] text-gray-300 text-xs px-2 py-1 rounded-md"
-                      >
-                        {facility}
-                      </span>
-                    ))}
+                  <div className="mt-3">
+                    <p className="text-sm text-gray-400 mb-2">Facilities:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {turf.facilities.map((facility, index) => (
+                        <span
+                          key={index}
+                          className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full"
+                        >
+                          {facility}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
