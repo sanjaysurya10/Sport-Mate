@@ -18,6 +18,7 @@ type Turf = {
   sportType: string;
   pricePerHour: number;
   facilities: string[];
+  unavailableDates?: string[];
   ownerId?: {
     _id: string;
     name: string;
@@ -25,6 +26,10 @@ type Turf = {
     role: string;
   };
   isAvailable: boolean;
+};
+
+type ClosedDateState = {
+  [turfId: string]: string;
 };
 
 export default function OwnerDashboardPage() {
@@ -36,6 +41,8 @@ export default function OwnerDashboardPage() {
   const [authChecking, setAuthChecking] = useState(true);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  const [closedDateForm, setClosedDateForm] = useState<ClosedDateState>({});
 
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
@@ -111,6 +118,105 @@ export default function OwnerDashboardPage() {
     router.push("/login");
   };
 
+  const handleClosedDateChange = (turfId: string, date: string) => {
+    setClosedDateForm((prev) => ({
+      ...prev,
+      [turfId]: date,
+    }));
+  };
+
+  const handleAddClosedDate = async (turfId: string) => {
+    try {
+      setError("");
+      setSuccessMessage("");
+
+      const token = localStorage.getItem("token");
+      const selectedDate = closedDateForm[turfId];
+
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
+      if (!selectedDate) {
+        setError("Please select a date to close this turf");
+        return;
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/turfs/${turfId}/unavailable`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            date: selectedDate,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Failed to add closed date");
+        return;
+      }
+
+      setSuccessMessage("Closed date added successfully");
+      setClosedDateForm((prev) => ({
+        ...prev,
+        [turfId]: "",
+      }));
+
+      if (user) fetchTurfs(user);
+    } catch {
+      setError("Something went wrong while adding closed date");
+    }
+  };
+
+  const handleRemoveClosedDate = async (turfId: string, date: string) => {
+    try {
+      setError("");
+      setSuccessMessage("");
+
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/turfs/${turfId}/unavailable`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            date,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Failed to remove closed date");
+        return;
+      }
+
+      setSuccessMessage("Closed date removed successfully");
+
+      if (user) fetchTurfs(user);
+    } catch {
+      setError("Something went wrong while removing closed date");
+    }
+  };
+
   const handleAddTurf = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -179,9 +285,7 @@ export default function OwnerDashboardPage() {
     );
   }
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-[#28282B] text-white px-6 py-10">
@@ -212,9 +316,106 @@ export default function OwnerDashboardPage() {
         </div>
 
         {error && <p className="text-red-400 mb-4">{error}</p>}
-        {successMessage && <p className="text-green-400 mb-4">{successMessage}</p>}
+        {successMessage && (
+          <p className="text-green-400 mb-4">{successMessage}</p>
+        )}
 
-        <div className="bg-[#1f1f22] border border-white/10 rounded-2xl p-6 mb-10">
+        <h2 className="text-2xl font-semibold mb-6">My Turfs</h2>
+
+        {loading ? (
+          <p className="text-gray-400">Loading your turfs...</p>
+        ) : turfs.length === 0 ? (
+          <p className="text-gray-400">
+            No turfs found. Add your first turf below.
+          </p>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {turfs.map((turf) => (
+              <div
+                key={turf._id}
+                className="bg-[#1f1f22] border border-white/10 rounded-2xl p-5 shadow-lg"
+              >
+                <h3 className="text-xl font-semibold mb-2">{turf.name}</h3>
+                <p className="text-gray-300 mb-1">Location: {turf.location}</p>
+                <p className="text-gray-300 mb-1">Sport: {turf.sportType}</p>
+                <p className="text-gray-300 mb-1">
+                  Price: €{turf.pricePerHour} / hour
+                </p>
+                <p className="text-gray-300 mb-1">
+                  Available: {turf.isAvailable ? "Yes" : "No"}
+                </p>
+
+                {turf.facilities?.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-sm text-gray-400 mb-2">Facilities:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {turf.facilities.map((facility, index) => (
+                        <span
+                          key={index}
+                          className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full"
+                        >
+                          {facility}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-5 bg-[#2c2c31] rounded-xl p-4">
+                  <h4 className="font-semibold mb-3">Close turf on a date</h4>
+
+                  <input
+                    type="date"
+                    value={closedDateForm[turf._id] || ""}
+                    onChange={(e) =>
+                      handleClosedDateChange(turf._id, e.target.value)
+                    }
+                    className="w-full bg-[#1f1f22] border border-white/10 rounded-lg px-3 py-2 text-white mb-3"
+                  />
+
+                  <button
+                    onClick={() => handleAddClosedDate(turf._id)}
+                    className="w-full bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded-lg"
+                  >
+                    Mark as Closed
+                  </button>
+
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-400 mb-2">Closed dates:</p>
+
+                    {turf.unavailableDates &&
+                    turf.unavailableDates.length > 0 ? (
+                      <div className="space-y-2">
+                        {turf.unavailableDates.map((date) => (
+                          <div
+                            key={date}
+                            className="flex items-center justify-between bg-[#1f1f22] border border-white/10 rounded-lg px-3 py-2"
+                          >
+                            <span className="text-sm">{date}</span>
+                            <button
+                              onClick={() =>
+                                handleRemoveClosedDate(turf._id, date)
+                              }
+                              className="text-xs text-red-400 hover:text-red-300"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        No closed dates added.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="bg-[#1f1f22] border border-white/10 rounded-2xl p-6">
           <h2 className="text-2xl font-semibold mb-6">Add New Turf</h2>
 
           <form onSubmit={handleAddTurf} className="grid md:grid-cols-2 gap-4">
@@ -271,49 +472,6 @@ export default function OwnerDashboardPage() {
             </button>
           </form>
         </div>
-
-        <h2 className="text-2xl font-semibold mb-6">My Turfs</h2>
-
-        {loading ? (
-          <p className="text-gray-400">Loading your turfs...</p>
-        ) : turfs.length === 0 ? (
-          <p className="text-gray-400">No turfs found. Add your first turf above.</p>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {turfs.map((turf) => (
-              <div
-                key={turf._id}
-                className="bg-[#1f1f22] border border-white/10 rounded-2xl p-5 shadow-lg"
-              >
-                <h3 className="text-xl font-semibold mb-2">{turf.name}</h3>
-                <p className="text-gray-300 mb-1">Location: {turf.location}</p>
-                <p className="text-gray-300 mb-1">Sport: {turf.sportType}</p>
-                <p className="text-gray-300 mb-1">
-                  Price: €{turf.pricePerHour} / hour
-                </p>
-                <p className="text-gray-300 mb-1">
-                  Available: {turf.isAvailable ? "Yes" : "No"}
-                </p>
-
-                {turf.facilities?.length > 0 && (
-                  <div className="mt-3">
-                    <p className="text-sm text-gray-400 mb-2">Facilities:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {turf.facilities.map((facility, index) => (
-                        <span
-                          key={index}
-                          className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full"
-                        >
-                          {facility}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );

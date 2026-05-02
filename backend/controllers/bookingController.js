@@ -12,6 +12,18 @@ const createBooking = async (req, res) => {
       return res.status(400).json({ message: "Please fill all required fields" });
     }
 
+    const turf = await Turf.findById(turfId);
+
+    if (!turf) {
+      return res.status(404).json({ message: "Turf not found" });
+    }
+
+    if (turf.unavailableDates && turf.unavailableDates.includes(bookingDate)) {
+      return res.status(400).json({
+        message: "This turf is closed on the selected date",
+      });
+    }
+
     const existingBooking = await Booking.findOne({
       turfId,
       bookingDate,
@@ -31,7 +43,6 @@ const createBooking = async (req, res) => {
     });
 
     const user = await User.findById(userId);
-    const turf = await Turf.findById(turfId);
 
     if (user && turf) {
       await sendEmail(
@@ -105,7 +116,7 @@ const getAllBookings = async (req, res) => {
   try {
     const bookings = await Booking.find()
       .populate("userId", "name email role")
-      .populate("turfId", "name location sportType pricePerHour");
+      .populate("turfId", "name location sportType pricePerHour unavailableDates");
 
     return res.status(200).json(bookings);
   } catch (error) {
