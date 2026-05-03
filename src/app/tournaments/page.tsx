@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import BackButton from "@/components/BackButton";
 
 function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -64,6 +65,7 @@ export default function TournamentsPage() {
       <Header />
       
       <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
+        <div className="mb-6"><BackButton /></div>
         <div className="flex justify-between items-end mb-12 flex-wrap gap-6">
           <div>
             <h1 className="geo-sans glass-text-chrome text-4xl md:text-5xl font-black mb-4 pb-2">Tournaments</h1>

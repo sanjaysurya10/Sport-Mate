@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { MOCK_ADMIN_BOOKINGS, SPORT_ICONS } from "@/lib/mockData";
+import BackButton from "@/components/BackButton";
 
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState(MOCK_ADMIN_BOOKINGS);
@@ -20,7 +21,7 @@ export default function AdminBookingsPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      
+      <div><BackButton /></div>
       {/* Toast */}
       {toast.show && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#22c55e] text-white px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-2 border border-green-400 transition-all">

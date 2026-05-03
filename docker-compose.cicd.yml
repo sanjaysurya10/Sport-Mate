@@ -1,0 +1,5 @@
+services:
+  frontend:
+    image: ${CI_REGISTRY_IMAGE}/frontend:${CI_COMMIT_REF_SLUG}
+    ports:
+      - "127.0.0.1:${CI_API_PORT}:3000"

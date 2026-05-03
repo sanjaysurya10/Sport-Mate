@@ -1,6 +1,7 @@
 "use client";
 
 import { MOCK_ADMIN_STATS, MOCK_BOOKINGS_CHART } from "@/lib/mockData";
+import BackButton from "@/components/BackButton";
 
 export default function AdminDashboardPage() {
   const maxCount = Math.max(...MOCK_BOOKINGS_CHART.map((d) => d.count));
@@ -42,7 +43,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
-
+      <div><BackButton /></div>
       <div>
         <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-none mb-2">Platform Overview</h1>
         <p className="text-gray-400 text-base leading-relaxed">Welcome to the SportMate administration panel.</p>

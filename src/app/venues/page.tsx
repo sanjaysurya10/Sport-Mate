@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import BackButton from "@/components/BackButton";
 import { Search } from "lucide-react";
 import { MOCK_VENUES, SPORT_ICONS } from "@/lib/mockData";
 
@@ -52,6 +53,7 @@ export default function VenuesPage() {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full
                       bg-[#4a6cf7]/8 blur-[150px] pointer-events-none -z-0" />
 
+      <div className="mb-4 relative z-10"><BackButton /></div>
       <div className="mb-8 relative z-10 flex items-center gap-3">
         <Link href="/">
           <img 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { MOCK_VENUES } from "@/lib/mockData";
+import BackButton from "@/components/BackButton";
 
 const ALL_SPORTS = ["Football", "Basketball", "Tennis", "Badminton", "Cricket", "Rugby", "GAA", "Athletics"];
 const ALL_FACILITIES = ["Floodlights", "Changing rooms", "Parking", "Café", "Equipment hire", "Lockers"];
@@ -48,7 +49,7 @@ export default function EditVenuePage() {
 
   return (
     <div className="min-h-screen pt-24 pb-20 px-6 max-w-3xl mx-auto">
-      
+      <div className="mb-6"><BackButton /></div>
       {/* Toast */}
       {toast.show && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#22c55e] text-white px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-2 animate-in slide-in-from-bottom border border-green-400">

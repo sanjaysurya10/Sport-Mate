@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { addDays, format } from "date-fns";
 import { useAuth } from "@/lib/authContext";
+import BackButton from "@/components/BackButton";
 import { MOCK_VENUES, MOCK_WEATHER, SPORT_ICONS } from "@/lib/mockData";
 
 const CITY_COORDS: Record<string, {lat: number, lon: number}> = {
@@ -135,7 +136,7 @@ export default function VenueDetailPage() {
 
   return (
     <div className="min-h-screen pt-24 pb-20 px-6 max-w-7xl mx-auto">
-      
+      <div className="mb-6"><BackButton /></div>
       {/* Toast */}
       {toast.show && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#22c55e] text-white px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-2 animate-in slide-in-from-bottom border border-green-400">

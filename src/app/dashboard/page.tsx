@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import BackButton from "@/components/BackButton";
 
 type User = {
   id?: string;
@@ -77,17 +78,6 @@ export default function DashboardPage() {
 
     try {
       const parsedUser: User = JSON.parse(savedUser);
-
-      if (parsedUser.role === "owner") {
-        router.push("/owner/dashboard");
-        return;
-      }
-
-      if (parsedUser.role === "admin") {
-        router.push("/admin");
-        return;
-      }
-
       setUser(parsedUser);
     } catch {
       localStorage.removeItem("user");
@@ -266,6 +256,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#28282B] text-white px-6 py-10">
       <div className="max-w-6xl mx-auto">
+        <div className="mb-4"><BackButton /></div>
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold">Player Dashboard</h1>

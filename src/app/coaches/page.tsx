@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import BackButton from "@/components/BackButton";
 
 function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -66,6 +67,7 @@ export default function CoachesPage() {
       <Header />
       
       <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
+        <div className="mb-6"><BackButton /></div>
         <div className="mb-12">
           <h1 className="geo-sans glass-text-chrome text-4xl md:text-5xl font-black mb-4 pb-2">Expert Coaches</h1>
           <p className="text-gray-400">Elevate your game with professional training.</p>

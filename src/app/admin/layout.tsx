@@ -1,18 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LayoutDashboard, Users, CalendarCheck, BarChart3, LogOut, Menu, X } from "lucide-react";
-import { useAuth } from "@/lib/authContext";
+
+type AuthUser = { name: string; email: string; role: string };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [checking, setChecking] = useState(true);
 
-  if (!user || user.role !== "admin") {
+  useEffect(() => {
+    const stored = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
+    if (stored && token) {
+      try {
+        const parsed: AuthUser = JSON.parse(stored);
+        if (parsed.role === "admin") {
+          setUser(parsed);
+          setChecking(false);
+          return;
+        }
+      } catch { /* fall through */ }
+    }
+    setChecking(false);
+  }, []);
+
+  if (checking) return null;
+
+  if (!user) {
     return (
       <div className="min-h-screen pt-32 px-6 text-center bg-[#28282B]">
         <h1 className="text-3xl font-bold mb-4">Admin Access Required</h1>
@@ -22,8 +42,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const handleLogout = () => {
-    logout();
-    router.push("/");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    router.push("/login");
   };
 
   const navLinks = [

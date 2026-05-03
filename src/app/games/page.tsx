@@ -2,20 +2,48 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { MOCK_GAMES, SPORT_ICONS } from "@/lib/mockData";
+import BackButton from "@/components/BackButton";
 
 const SPORTS = ["Football", "Basketball", "Tennis", "Badminton", "Cricket", "Rugby", "GAA"];
 
 export default function GamesPage() {
+  const router = useRouter();
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loggedInUser, setLoggedInUser] = useState<{ role: string } | null>(null);
 
-  // Fake loading delay
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 500);
+    // Read persisted JWT auth
+    const stored = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
+    if (stored && token) {
+      try {
+        setLoggedInUser(JSON.parse(stored));
+      } catch {
+        // ignore malformed
+      }
+    }
     return () => clearTimeout(timer);
   }, []);
+
+  const handleJoinGame = () => {
+    if (loggedInUser) {
+      router.push("/dashboard");
+    } else {
+      router.push("/login?redirect=/dashboard");
+    }
+  };
+
+  const handleHostGame = () => {
+    if (loggedInUser?.role === "owner") {
+      router.push("/owner/dashboard");
+    } else {
+      router.push("/login?redirect=/owner/dashboard");
+    }
+  };
 
   const toggleSport = (sport: string) => {
     setSelectedSports((prev) =>
@@ -32,11 +60,12 @@ export default function GamesPage() {
 
   return (
     <div className="min-h-screen pt-24 pb-20 px-6 max-w-7xl mx-auto">
+      <div className="mb-4"><BackButton /></div>
       <div className="mb-8 flex items-center gap-3">
         <Link href="/">
-          <img 
-            src="/logo.png" 
-            alt="Sport Mate Logo" 
+          <img
+            src="/logo.png"
+            alt="Sport Mate Logo"
             className="w-12 h-12 rounded-full object-cover hover:opacity-80 transition-opacity border border-white/10"
           />
         </Link>
@@ -47,7 +76,7 @@ export default function GamesPage() {
           <h1 className="geo-sans glass-text-chrome text-5xl md:text-6xl font-black mb-4 pb-2">Open games near you</h1>
           <p className="text-[#888888]">Join a local game or find players for your own session.</p>
         </div>
-        <button className="border border-[#4a6cf7] text-[#4a6cf7] hover:bg-[#4a6cf7] hover:text-white rounded-full px-6 py-3 font-medium transition-colors shrink-0">
+        <button onClick={handleHostGame} className="border border-[#4a6cf7] text-[#4a6cf7] hover:bg-[#4a6cf7] hover:text-white rounded-full px-6 py-3 font-medium transition-colors shrink-0">
           Host a game
         </button>
       </div>
@@ -151,7 +180,7 @@ export default function GamesPage() {
                       Game Full
                     </div>
                   ) : (
-                    <button className="bg-[#4a6cf7] hover:bg-[#3b5de7] text-white rounded-full px-4 py-2 text-sm font-medium transition-colors w-full">
+                    <button onClick={handleJoinGame} className="bg-[#4a6cf7] hover:bg-[#3b5de7] text-white rounded-full px-4 py-2 text-sm font-medium transition-colors w-full">
                       Join game
                     </button>
                   )}

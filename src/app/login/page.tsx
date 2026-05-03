@@ -1,16 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const navigateAfterLogin = (role: string, email: string) => {
+    if (email === "dragonfruit@test.com") {
+      router.push("/hub");
+    } else if (redirectTo) {
+      router.push(redirectTo);
+    } else if (role === "admin") {
+      router.push("/admin");
+    } else if (role === "owner") {
+      router.push("/owner/dashboard");
+    } else {
+      router.push("/dashboard");
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -20,13 +36,8 @@ export default function LoginPage() {
     try {
       const response = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
@@ -37,35 +48,27 @@ export default function LoginPage() {
         return;
       }
 
-      // Save token and user in localStorage
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-
-      // Redirect based on role
-      if (data.user.role === "admin") {
-        router.push("/admin");
-      } else if (data.user.role === "owner") {
-        router.push("/owner/dashboard");
-      } else {
-        router.push("/dashboard");
-      }
-    } catch (err) {
+      navigateAfterLogin(data.user.role, data.user.email);
+    } catch {
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+
   const handleDemoLogin = async (role: "player" | "owner" | "admin") => {
     let demoEmail = "";
-    let demoPassword = "123456";
+    const demoPassword = "123456";
 
     if (role === "player") {
       demoEmail = "dhanus@test.com";
     } else if (role === "owner") {
       demoEmail = "owner@test.com";
     } else {
-      demoEmail = "admin@test.com";
+      demoEmail = "sanjay@test.com";
     }
 
     setEmail(demoEmail);
@@ -76,13 +79,8 @@ export default function LoginPage() {
     try {
       const response = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: demoEmail,
-          password: demoPassword,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: demoEmail, password: demoPassword }),
       });
 
       const data = await response.json();
@@ -95,15 +93,8 @@ export default function LoginPage() {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-
-      if (data.user.role === "admin") {
-        router.push("/admin");
-      } else if (data.user.role === "owner") {
-        router.push("/owner/dashboard");
-      } else {
-        router.push("/dashboard");
-      }
-    } catch (err) {
+      navigateAfterLogin(data.user.role, data.user.email);
+    } catch {
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -207,5 +198,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

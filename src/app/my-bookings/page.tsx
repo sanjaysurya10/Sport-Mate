@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import BackButton from "@/components/BackButton";
 
 type Booking = {
   _id: string;
@@ -118,7 +119,8 @@ export default function MyBookingsPage() {
   return (
     <div className="min-h-screen bg-[#28282B] text-white px-6 py-10">
       <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-4"><BackButton /></div>
+      <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold">My Bookings</h1>
             <p className="text-gray-400 mt-2">

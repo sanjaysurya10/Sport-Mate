@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Search } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { MOCK_ADMIN_USERS } from "@/lib/mockData";
 
 export default function AdminUsersPage() {
@@ -35,7 +36,7 @@ export default function AdminUsersPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      
+      <div><BackButton /></div>
       {/* Delete Confirmation Modal */}
       {confirmDelete && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
