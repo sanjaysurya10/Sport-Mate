@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MOCK_GAMES, SPORT_ICONS } from "@/lib/mockData";
 import BackButton from "@/components/BackButton";
+import Navbar from "@/components/Navbar";
 
 const SPORTS = ["Football", "Basketball", "Tennis", "Badminton", "Cricket", "Rugby", "GAA"];
 
@@ -59,7 +60,9 @@ export default function GamesPage() {
   }, [selectedSports]);
 
   return (
-    <div className="min-h-screen pt-24 pb-20 px-6 max-w-7xl mx-auto">
+    <>
+    <Navbar />
+    <div className="min-h-screen pt-20 pb-20 px-6 max-w-7xl mx-auto">
       <div className="mb-4"><BackButton /></div>
       <div className="mb-8 flex items-center gap-3">
         <Link href="/">
@@ -203,5 +206,6 @@ export default function GamesPage() {
         </div>
       )}
     </div>
+    </>
   );
 }

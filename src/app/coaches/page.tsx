@@ -1,58 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import BackButton from "@/components/BackButton";
-
-function Header() {
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-[#0d0d0d]/90 backdrop-blur-md" : "bg-[#0d0d0d]"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3">
-          <img 
-            src="/logo.png" 
-            alt="Sport Mate Logo" 
-            className="w-12 h-12 rounded-full object-cover hover:opacity-80 transition-opacity border border-white/10"
-          />
-          <span className="geo-sans font-black text-xl tracking-widest text-[#4a6cf7]">COACHES</span>
-        </Link>
-
-        <nav className="hidden md:flex items-center gap-8">
-          <Link href="/games" className="text-white/80 hover:text-white transition-colors text-sm font-medium pb-1">
-            Games
-          </Link>
-          <Link href="/venues" className="text-white/80 hover:text-white transition-colors text-sm font-medium pb-1">
-            Venues
-          </Link>
-          <Link href="/coaches" className="text-white transition-colors text-sm font-bold border-b-2 border-orange-500 pb-1">
-            Coaches
-          </Link>
-          <Link href="/tournaments" className="text-white/80 hover:text-white transition-colors text-sm font-medium pb-1">
-            Tournaments
-          </Link>
-          <Link href="/login" className="text-white/80 hover:text-white transition-colors text-sm font-medium pb-1">
-            Login
-          </Link>
-        </nav>
-      </div>
-    </header>
-  );
-}
+import Navbar from "@/components/Navbar";
 
 export default function CoachesPage() {
   const coaches = [
@@ -62,10 +12,10 @@ export default function CoachesPage() {
   ];
 
   return (
-    <main className="min-h-screen pt-24 relative">
+    <main className="min-h-screen pt-20 relative">
       <div className="absolute top-0 left-0 w-[500px] h-[500px] rounded-full bg-orange-500/5 blur-[150px] pointer-events-none -z-0" />
-      <Header />
-      
+      <Navbar />
+
       <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
         <div className="mb-6"><BackButton /></div>
         <div className="mb-12">

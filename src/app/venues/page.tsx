@@ -6,6 +6,7 @@ import Link from "next/link";
 import BackButton from "@/components/BackButton";
 import { Search } from "lucide-react";
 import { MOCK_VENUES, SPORT_ICONS } from "@/lib/mockData";
+import Navbar from "@/components/Navbar";
 
 const SPORTS = ["Football", "Basketball", "Tennis", "Badminton", "Cricket", "Rugby", "GAA"];
 const CITIES = ["All", "Dublin", "Cork", "Galway", "Limerick", "Waterford", "Belfast"];
@@ -48,7 +49,9 @@ export default function VenuesPage() {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-20 px-6 max-w-7xl mx-auto relative">
+    <>
+    <Navbar />
+    <div className="min-h-screen pt-20 pb-20 px-6 max-w-7xl mx-auto relative">
       {/* Ambient glow */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full
                       bg-[#4a6cf7]/8 blur-[150px] pointer-events-none -z-0" />
@@ -222,5 +225,6 @@ export default function VenuesPage() {
         </div>
       )}
     </div>
+    </>
   );
 }

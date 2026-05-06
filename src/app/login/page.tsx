@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
+import Navbar from "@/components/Navbar";
 
 function LoginForm() {
   const router = useRouter();
@@ -203,8 +204,11 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense>
-      <LoginForm />
-    </Suspense>
+    <>
+      <Navbar />
+      <Suspense>
+        <LoginForm />
+      </Suspense>
+    </>
   );
 }

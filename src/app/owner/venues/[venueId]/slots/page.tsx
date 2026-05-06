@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { format, startOfWeek, addDays, subWeeks, addWeeks } from "date-fns";
 import { MOCK_VENUES } from "@/lib/mockData";
+import Navbar from "@/components/Navbar";
 
 type SlotStatus = "available" | "booked" | "blocked";
 
@@ -77,7 +78,9 @@ export default function SlotsManagerPage() {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-20 px-6 max-w-7xl mx-auto">
+    <>
+    <Navbar />
+    <div className="min-h-screen pt-20 pb-20 px-6 max-w-7xl mx-auto">
       
       <div className="mb-6">
         <Link href="/owner/dashboard" className="text-gray-400 hover:text-white transition-colors text-sm flex items-center gap-1">
@@ -189,5 +192,6 @@ export default function SlotsManagerPage() {
         })}
       </div>
     </div>
+    </>
   );
 }

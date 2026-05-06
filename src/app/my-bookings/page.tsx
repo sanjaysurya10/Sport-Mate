@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import BackButton from "@/components/BackButton";
+import Navbar from "@/components/Navbar";
 
 type Booking = {
   _id: string;
@@ -117,7 +118,9 @@ export default function MyBookingsPage() {
   };
 
   return (
-    <div className="min-h-screen text-white px-6 py-10">
+    <>
+    <Navbar />
+    <div className="min-h-screen text-white px-6 pt-20 pb-10">
       <div className="max-w-5xl mx-auto">
         <div className="mb-4"><BackButton /></div>
       <div className="flex items-center justify-between mb-8">
@@ -189,5 +192,6 @@ export default function MyBookingsPage() {
         )}
       </div>
     </div>
+    </>
   );
 }

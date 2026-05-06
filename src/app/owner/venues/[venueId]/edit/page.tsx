@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { MOCK_VENUES } from "@/lib/mockData";
 import BackButton from "@/components/BackButton";
+import Navbar from "@/components/Navbar";
 
 const ALL_SPORTS = ["Football", "Basketball", "Tennis", "Badminton", "Cricket", "Rugby", "GAA", "Athletics"];
 const ALL_FACILITIES = ["Floodlights", "Changing rooms", "Parking", "Café", "Equipment hire", "Lockers"];
@@ -48,7 +49,9 @@ export default function EditVenuePage() {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-20 px-6 max-w-3xl mx-auto">
+    <>
+    <Navbar />
+    <div className="min-h-screen pt-20 pb-20 px-6 max-w-3xl mx-auto">
       <div className="mb-6"><BackButton /></div>
       {/* Toast */}
       {toast.show && (
@@ -188,5 +191,6 @@ export default function EditVenuePage() {
         </div>
       </form>
     </div>
+    </>
   );
 }

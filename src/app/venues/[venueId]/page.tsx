@@ -7,6 +7,7 @@ import { addDays, format } from "date-fns";
 import { useAuth } from "@/lib/authContext";
 import BackButton from "@/components/BackButton";
 import { MOCK_VENUES, MOCK_WEATHER, SPORT_ICONS } from "@/lib/mockData";
+import Navbar from "@/components/Navbar";
 
 const CITY_COORDS: Record<string, {lat: number, lon: number}> = {
   "Dublin": { lat: 53.3498, lon: -6.2603 },
@@ -135,7 +136,9 @@ export default function VenueDetailPage() {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-20 px-6 max-w-7xl mx-auto">
+    <>
+    <Navbar />
+    <div className="min-h-screen pt-20 pb-20 px-6 max-w-7xl mx-auto">
       <div className="mb-6"><BackButton /></div>
       {/* Toast */}
       {toast.show && (
@@ -378,5 +381,6 @@ export default function VenueDetailPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
