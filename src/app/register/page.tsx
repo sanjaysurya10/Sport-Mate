@@ -69,7 +69,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#28282B] relative flex items-center justify-center px-6 py-12">
+    <div className="min-h-screen relative flex items-center justify-center px-6 py-12">
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-[#4a6cf7]/5 blur-[120px] pointer-events-none" />
 
       <div className="animate-enter card p-10 max-w-md w-full">

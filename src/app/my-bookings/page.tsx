@@ -117,7 +117,7 @@ export default function MyBookingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#28282B] text-white px-6 py-10">
+    <div className="min-h-screen text-white px-6 py-10">
       <div className="max-w-5xl mx-auto">
         <div className="mb-4"><BackButton /></div>
       <div className="flex items-center justify-between mb-8">

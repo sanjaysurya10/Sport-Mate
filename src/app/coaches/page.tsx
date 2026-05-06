@@ -62,7 +62,7 @@ export default function CoachesPage() {
   ];
 
   return (
-    <main className="min-h-screen pt-24 bg-[#28282B] relative">
+    <main className="min-h-screen pt-24 relative">
       <div className="absolute top-0 left-0 w-[500px] h-[500px] rounded-full bg-orange-500/5 blur-[150px] pointer-events-none -z-0" />
       <Header />
       

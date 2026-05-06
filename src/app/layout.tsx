@@ -17,7 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="antialiased bg-[#0d0d0d] text-white">
+      <body className="antialiased text-white">
+        {/* Global background */}
+        <div className="fixed inset-0 -z-10" style={{ background: "linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #0f0f0f 100%)" }} />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

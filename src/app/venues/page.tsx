@@ -48,7 +48,7 @@ export default function VenuesPage() {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-20 px-6 max-w-7xl mx-auto bg-[#28282B] relative">
+    <div className="min-h-screen pt-24 pb-20 px-6 max-w-7xl mx-auto relative">
       {/* Ambient glow */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full
                       bg-[#4a6cf7]/8 blur-[150px] pointer-events-none -z-0" />

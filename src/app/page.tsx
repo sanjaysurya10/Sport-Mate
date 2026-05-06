@@ -761,7 +761,7 @@ function Footer() {
 // Main Page Component
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#28282B]">
+    <main className="min-h-screen">
       <Header />
       <HeroSection />
       <FeaturesSection />

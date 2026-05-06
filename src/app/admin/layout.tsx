@@ -55,7 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div className="min-h-screen bg-[#28282B]">
+    <div className="min-h-screen">
 
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#141414] border-b border-white/[0.06] z-50 flex items-center justify-between px-6">

@@ -280,7 +280,7 @@ export default function OwnerDashboardPage() {
 
   if (authChecking) {
     return (
-      <div className="min-h-screen bg-[#28282B] text-white p-8">
+      <div className="min-h-screen text-white p-8">
         <p className="text-gray-400">Checking owner login...</p>
       </div>
     );
@@ -289,25 +289,18 @@ export default function OwnerDashboardPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-[#28282B] text-white px-6 py-10">
+    <div className="min-h-screen text-white px-6 py-10">
       <div className="max-w-6xl mx-auto">
         <div className="mb-4"><BackButton /></div>
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold">Owner Dashboard</h1>
             <p className="text-gray-400 mt-2">
-              Welcome, Sanjay Surya
+              Welcome, {user.name}
             </p>
           </div>
 
           <div className="flex gap-3">
-            <button
-              onClick={() => router.push("/")}
-              className="bg-gray-700 hover:bg-gray-800 px-4 py-2 rounded-lg"
-            >
-              Home
-            </button>
-
             <button
               onClick={handleLogout}
               className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg"

@@ -57,7 +57,7 @@ export default function HubPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-[#28282B] flex flex-col items-center justify-center px-6 py-16">
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-16">
       {/* Glow */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-[#4a6cf7]/8 blur-[140px] pointer-events-none" />
 

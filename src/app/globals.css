@@ -56,7 +56,7 @@
   --highlight-edge:   rgba(255, 255, 255, 0.05);
 
   /* Legacy aliases (kept for Tailwind compatibility) */
-  --background: #28282B;
+  --background: #0f0f0f;
   --foreground: #ffffff;
   --muted: #A0A0A0;
   --card: #141414;
@@ -73,7 +73,8 @@
 html { scroll-behavior: smooth; }
 
 body {
-  background: var(--bg-canvas);
+  background: transparent;
+  background-color: transparent;
   color: var(--text-primary);
   font-family: 'Nexa', system-ui, -apple-system, sans-serif;
   line-height: 1.6;

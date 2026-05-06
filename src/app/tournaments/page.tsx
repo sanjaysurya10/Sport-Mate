@@ -60,7 +60,7 @@ export default function TournamentsPage() {
   ];
 
   return (
-    <main className="min-h-screen pt-24 bg-[#28282B] relative">
+    <main className="min-h-screen pt-24 relative">
       <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-purple-500/10 blur-[150px] pointer-events-none -z-0" />
       <Header />
       
